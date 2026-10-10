@@ -1,0 +1,9 @@
+# Install INTO a PyTorch Native (TorchNeuron) environment on Trainium2, on top of its own
+# torch / torch-neuronx build. Do not let pip replace torch (use --no-deps if needed).
+transformers>=5.5,<6
+mistral_common[audio]>=1.8
+safetensors>=0.5
+huggingface_hub>=0.30
+pyarrow>=18
+soundfile>=0.12
+librosa>=0.10

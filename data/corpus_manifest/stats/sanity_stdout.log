@@ -1,0 +1,60 @@
+{
+ "errors": [],
+ "train_rows": 175000,
+ "train_shards": 90,
+ "train_hours": 464.01,
+ "train_licenses": [
+  "CC-BY-2.0",
+  "CC-BY-3.0",
+  "CC-BY-4.0",
+  "CC0-1.0",
+  "LicenseRef-Public-Domain",
+  "LicenseRef-US-Government-Work",
+  "PDM-1.0"
+ ],
+ "train_duration_range": [
+  1.0,
+  29.999937057495117
+ ],
+ "eval_rows": 12108,
+ "eval_shards": 9,
+ "eval_hours": 26.1,
+ "eval_licenses": [
+  "CC-BY-4.0",
+  "CC0-1.0"
+ ],
+ "duplicate_clip_ids": 0,
+ "speaker_overlap": {
+  "ami": {
+   "train_speakers": 152,
+   "eval_speakers": 16,
+   "overlap": [],
+   "n_overlap": 0
+  },
+  "cv17": {
+   "train_speakers": 37475,
+   "eval_speakers": 1939,
+   "overlap": [],
+   "n_overlap": 0
+  },
+  "librivox": {
+   "train_speakers": 5940,
+   "eval_speakers": 73,
+   "overlap": [],
+   "n_overlap": 0
+  },
+  "voxpopuli": {
+   "train_speakers": 320,
+   "eval_speakers": 285,
+   "overlap": [],
+   "n_overlap": 0
+  }
+ },
+ "librispeech_vs_libritts_r_train_chapter_overlap": 0,
+ "disk_bytes": {
+  "train": 43619928927,
+  "eval": 2318043006
+ },
+ "ok": true
+}
+decode groups checked: 18 all ok: True

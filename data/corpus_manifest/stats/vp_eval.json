@@ -1,0 +1,20 @@
+{
+ "config": "en",
+ "dataset": "facebook/voxpopuli",
+ "decode_stage_rejects_within_drawn_ranks": {},
+ "name": "vp_eval",
+ "role": "eval",
+ "splits": {
+  "test": {
+   "clips": 1842,
+   "hours": 4.93,
+   "max_duration_s": 69.24,
+   "min_duration_s": 0.6,
+   "shards": 1,
+   "speakers": 285
+  }
+ },
+ "target": null,
+ "total_clips": 1842,
+ "total_hours": 4.93
+}

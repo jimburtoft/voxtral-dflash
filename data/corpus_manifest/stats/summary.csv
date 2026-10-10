@@ -1,0 +1,19 @@
+set,role,dataset,config,split,clips,hours,speakers,pool_rows,dropped_select,dropped_decode
+ls_train,train,openslr/librispeech_asr,all,train.clean.100,2720,9.599,234,281241,"{""chapter_reserved_for_other_corpus"": 131059, ""empty_text"": 0, ""task001_flagged_list"": 36, ""text_overlap_vs_eval"": 0}",{}
+ls_train,train,openslr/librispeech_asr,all,train.clean.360,9843,34.521,849,281241,"{""chapter_reserved_for_other_corpus"": 131059, ""empty_text"": 0, ""task001_flagged_list"": 36, ""text_overlap_vs_eval"": 0}",{}
+ls_train,train,openslr/librispeech_asr,all,train.other.500,12437,41.779,1071,281241,"{""chapter_reserved_for_other_corpus"": 131059, ""empty_text"": 0, ""task001_flagged_list"": 36, ""text_overlap_vs_eval"": 0}",{}
+ltts_train,train,mythicinfinity/libritts_r,all,train.clean.100,1614,2.814,219,354693,"{""chapter_reserved_for_other_corpus"": 186144, ""empty_text"": 0, ""task001_flagged_list"": 43, ""text_overlap_vs_eval"": 0}","{""decoded_duration_out_of_range"": 747}"
+ltts_train,train,mythicinfinity/libritts_r,all,train.clean.360,5710,10.654,771,354693,"{""chapter_reserved_for_other_corpus"": 186144, ""empty_text"": 0, ""task001_flagged_list"": 43, ""text_overlap_vs_eval"": 0}","{""decoded_duration_out_of_range"": 747}"
+ltts_train,train,mythicinfinity/libritts_r,all,train.other.500,7676,13.699,991,354693,"{""chapter_reserved_for_other_corpus"": 186144, ""empty_text"": 0, ""task001_flagged_list"": 43, ""text_overlap_vs_eval"": 0}","{""decoded_duration_out_of_range"": 747}"
+mls_train,train,parler-tts/mls_eng,default,train,20000,82.691,5193,10808037,"{""empty_text"": 0, ""meta_duration_outside_1_30s"": 0, ""task001_flagged_list"": 0, ""text_overlap_vs_eval"": 15}",{}
+cv_train,train,fsicoli/common_voice_17_0,en,train,40000,65.443,37475,1101170,"{""empty_text"": 0, ""meta_duration_outside_1_30s"": 4, ""task001_flagged_list"": 83, ""text_overlap_vs_eval"": 0}",{}
+vp_train,train,facebook/voxpopuli,en,train,30000,82.674,320,182482,"{""empty_text"": 0, ""speaker_in_eval_droplist"": 47276, ""speaker_unknown_None"": 64260, ""task001_flagged_list"": 4, ""text_overlap_vs_eval"": 0}","{""decoded_duration_out_of_range"": 357}"
+ps_train,train,MLCommons/peoples_speech,clean,train,25000,95.934,0,1501271,"{""empty_text"": 0, ""meta_duration_outside_1_30s"": 0, ""source_license_not_allowed"": 592, ""task001_flagged_list"": 0, ""text_overlap_vs_eval"": 1}",{}
+ami_train,train,edinburghcstr/ami,ihm,train,20000,24.202,152,108502,"{""empty_text"": 0, ""meeting_IB4005_dropped"": 421, ""meta_duration_outside_1.5_30s"": 51652, ""task001_flagged_list"": 7, ""text_overlap_vs_eval"": 0}",{}
+ls_eval,eval,openslr/librispeech_asr,all,test.clean,2620,5.403,40,5559,{},{}
+ls_eval,eval,openslr/librispeech_asr,all,test.other,2939,5.342,33,5559,{},{}
+cv_eval,eval,fsicoli/common_voice_17_0,en,test,2000,3.268,1939,16393,"{""empty_text"": 0}",{}
+vp_eval,eval,facebook/voxpopuli,en,test,1842,4.93,285,1842,"{""empty_text"": 0}",{}
+fleurs_eval,eval,google/fleurs,en_us,test,647,1.774,0,647,{},{}
+ami_eval,eval,edinburghcstr/ami,ihm,test,2000,2.437,16,12643,"{""empty_text"": 0, ""meta_duration_outside_1.5_30s"": 6304}",{}
+ami_longform,eval,edinburghcstr/ami,ihm+Mix-Headset,test,60,2.949,,,,

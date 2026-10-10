@@ -1,0 +1,12 @@
+{
+ "config": "en",
+ "dataset": "fsicoli/common_voice_17_0",
+ "dropped": {
+  "empty_text": 0
+ },
+ "eligible_after_filters": 16393,
+ "name": "cv_eval",
+ "pool_rows": 16393,
+ "revision": "8262c16bf297c87a9cd88c51997c4758ed7a8ba2",
+ "role": "eval"
+}

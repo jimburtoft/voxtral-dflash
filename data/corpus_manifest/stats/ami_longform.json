@@ -1,0 +1,89 @@
+{
+ "hours": 2.949,
+ "meetings": [
+  "EN2002a",
+  "EN2002b",
+  "EN2002c",
+  "EN2002d",
+  "ES2004a",
+  "ES2004b",
+  "ES2004c",
+  "ES2004d",
+  "IS1009a",
+  "IS1009b",
+  "IS1009c",
+  "IS1009d",
+  "TS3003a",
+  "TS3003b",
+  "TS3003c",
+  "TS3003d"
+ ],
+ "note": "10615 s over 16 meetings",
+ "per_meeting": {
+  "EN2002a": {
+   "seconds": 785.2100625,
+   "windows": 4
+  },
+  "EN2002b": {
+   "seconds": 783.5300000000001,
+   "windows": 4
+  },
+  "EN2002c": {
+   "seconds": 682.729875,
+   "windows": 4
+  },
+  "EN2002d": {
+   "seconds": 461.83000000000004,
+   "windows": 4
+  },
+  "ES2004a": {
+   "seconds": 878.28,
+   "windows": 4
+  },
+  "ES2004b": {
+   "seconds": 911.6400625,
+   "windows": 4
+  },
+  "ES2004c": {
+   "seconds": 633.4601250000001,
+   "windows": 4
+  },
+  "ES2004d": {
+   "seconds": 727.980625,
+   "windows": 4
+  },
+  "IS1009a": {
+   "seconds": 748.46,
+   "windows": 4
+  },
+  "IS1009b": {
+   "seconds": 913.8100625,
+   "windows": 4
+  },
+  "IS1009c": {
+   "seconds": 516.9300000000001,
+   "windows": 4
+  },
+  "IS1009d": {
+   "seconds": 613.4899375,
+   "windows": 4
+  },
+  "TS3003a": {
+   "seconds": 466.1599375,
+   "windows": 3
+  },
+  "TS3003b": {
+   "seconds": 523.4001875,
+   "windows": 3
+  },
+  "TS3003c": {
+   "seconds": 442.48012500000004,
+   "windows": 3
+  },
+  "TS3003d": {
+   "seconds": 525.6199375000001,
+   "windows": 3
+  }
+ },
+ "windows": 60
+}

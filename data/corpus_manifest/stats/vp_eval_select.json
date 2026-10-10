@@ -1,0 +1,13 @@
+{
+ "config": "en",
+ "dataset": "facebook/voxpopuli",
+ "dropped": {
+  "empty_text": 0
+ },
+ "eligible_after_filters": 1842,
+ "name": "vp_eval",
+ "pool_rows": 1842,
+ "ref_text_fallback_to_normalized": 52,
+ "revision": "42f01879c780b4a2e90ec0b4f616c2ece526e4f1",
+ "role": "eval"
+}

@@ -1,0 +1,22 @@
+{
+ "config": "en",
+ "dataset": "facebook/voxpopuli",
+ "decode_stage_rejects_within_drawn_ranks": {
+  "decoded_duration_out_of_range": 357
+ },
+ "name": "vp_train",
+ "role": "train",
+ "splits": {
+  "train": {
+   "clips": 30000,
+   "hours": 82.674,
+   "max_duration_s": 30.0,
+   "min_duration_s": 1.0,
+   "shards": 15,
+   "speakers": 320
+  }
+ },
+ "target": 30000,
+ "total_clips": 30000,
+ "total_hours": 82.674
+}

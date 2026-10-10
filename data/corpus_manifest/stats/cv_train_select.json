@@ -1,0 +1,15 @@
+{
+ "config": "en",
+ "dataset": "fsicoli/common_voice_17_0",
+ "dropped": {
+  "empty_text": 0,
+  "meta_duration_outside_1_30s": 4,
+  "task001_flagged_list": 83,
+  "text_overlap_vs_eval": 0
+ },
+ "eligible_after_filters": 1101083,
+ "name": "cv_train",
+ "pool_rows": 1101170,
+ "revision": "8262c16bf297c87a9cd88c51997c4758ed7a8ba2",
+ "role": "train"
+}

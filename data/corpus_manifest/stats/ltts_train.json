@@ -1,0 +1,38 @@
+{
+ "config": "all",
+ "dataset": "mythicinfinity/libritts_r",
+ "decode_stage_rejects_within_drawn_ranks": {
+  "decoded_duration_out_of_range": 747
+ },
+ "name": "ltts_train",
+ "role": "train",
+ "splits": {
+  "train.clean.100": {
+   "clips": 1614,
+   "hours": 2.814,
+   "max_duration_s": 28.72,
+   "min_duration_s": 1.0,
+   "shards": 1,
+   "speakers": 219
+  },
+  "train.clean.360": {
+   "clips": 5710,
+   "hours": 10.654,
+   "max_duration_s": 28.68,
+   "min_duration_s": 1.0,
+   "shards": 3,
+   "speakers": 771
+  },
+  "train.other.500": {
+   "clips": 7676,
+   "hours": 13.699,
+   "max_duration_s": 29.76,
+   "min_duration_s": 1.0,
+   "shards": 4,
+   "speakers": 991
+  }
+ },
+ "target": 15000,
+ "total_clips": 15000,
+ "total_hours": 27.167
+}

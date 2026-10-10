@@ -1,0 +1,28 @@
+{
+ "config": "all",
+ "dataset": "openslr/librispeech_asr",
+ "decode_stage_rejects_within_drawn_ranks": {},
+ "name": "ls_eval",
+ "role": "eval",
+ "splits": {
+  "test.clean": {
+   "clips": 2620,
+   "hours": 5.403,
+   "max_duration_s": 34.96,
+   "min_duration_s": 1.28,
+   "shards": 2,
+   "speakers": 40
+  },
+  "test.other": {
+   "clips": 2939,
+   "hours": 5.342,
+   "max_duration_s": 34.51,
+   "min_duration_s": 1.25,
+   "shards": 2,
+   "speakers": 33
+  }
+ },
+ "target": null,
+ "total_clips": 5559,
+ "total_hours": 10.745
+}

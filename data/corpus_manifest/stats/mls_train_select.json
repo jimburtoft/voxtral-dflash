@@ -1,0 +1,16 @@
+{
+ "config": "default",
+ "dataset": "parler-tts/mls_eng",
+ "dropped": {
+  "empty_text": 0,
+  "meta_duration_outside_1_30s": 0,
+  "task001_flagged_list": 0,
+  "text_overlap_vs_eval": 15
+ },
+ "eligible_after_filters": 199985,
+ "name": "mls_train",
+ "ordered_prefix_checked_for_overlap": 200000,
+ "pool_rows": 10808037,
+ "revision": "faf6604dcf0bb9ec0d9c280a140ad74da9c931b0",
+ "role": "train"
+}

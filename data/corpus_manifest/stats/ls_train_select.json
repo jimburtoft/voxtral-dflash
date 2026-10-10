@@ -1,0 +1,16 @@
+{
+ "chapters_in_pool": 2856,
+ "config": "all",
+ "dataset": "openslr/librispeech_asr",
+ "dropped": {
+  "chapter_reserved_for_other_corpus": 131059,
+  "empty_text": 0,
+  "task001_flagged_list": 36,
+  "text_overlap_vs_eval": 0
+ },
+ "eligible_after_filters": 150146,
+ "name": "ls_train",
+ "pool_rows": 281241,
+ "revision": "71cacbfb7e2354c4226d01e70d77d5fca3d04ba1",
+ "role": "train"
+}

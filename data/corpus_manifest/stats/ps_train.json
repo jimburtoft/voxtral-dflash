@@ -1,0 +1,20 @@
+{
+ "config": "clean",
+ "dataset": "MLCommons/peoples_speech",
+ "decode_stage_rejects_within_drawn_ranks": {},
+ "name": "ps_train",
+ "role": "train",
+ "splits": {
+  "train": {
+   "clips": 25000,
+   "hours": 95.934,
+   "max_duration_s": 15.75,
+   "min_duration_s": 1.02,
+   "shards": 13,
+   "speakers": 0
+  }
+ },
+ "target": 25000,
+ "total_clips": 25000,
+ "total_hours": 95.934
+}

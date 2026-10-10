@@ -1,0 +1,20 @@
+{
+ "config": "ihm",
+ "dataset": "edinburghcstr/ami",
+ "decode_stage_rejects_within_drawn_ranks": {},
+ "name": "ami_eval",
+ "role": "eval",
+ "splits": {
+  "test": {
+   "clips": 2000,
+   "hours": 2.437,
+   "max_duration_s": 26.17,
+   "min_duration_s": 1.5,
+   "shards": 1,
+   "speakers": 16
+  }
+ },
+ "target": 2000,
+ "total_clips": 2000,
+ "total_hours": 2.437
+}

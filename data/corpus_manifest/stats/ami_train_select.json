@@ -1,0 +1,16 @@
+{
+ "config": "ihm",
+ "dataset": "edinburghcstr/ami",
+ "dropped": {
+  "empty_text": 0,
+  "meeting_IB4005_dropped": 421,
+  "meta_duration_outside_1.5_30s": 51652,
+  "task001_flagged_list": 7,
+  "text_overlap_vs_eval": 0
+ },
+ "eligible_after_filters": 56422,
+ "name": "ami_train",
+ "pool_rows": 108502,
+ "revision": "46f28f2503e2ec48f8867a84eef356c70476beab",
+ "role": "train"
+}

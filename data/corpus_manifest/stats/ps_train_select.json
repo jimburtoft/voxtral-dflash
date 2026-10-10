@@ -1,0 +1,17 @@
+{
+ "config": "clean",
+ "dataset": "MLCommons/peoples_speech",
+ "dropped": {
+  "empty_text": 0,
+  "meta_duration_outside_1_30s": 0,
+  "source_license_not_allowed": 592,
+  "task001_flagged_list": 0,
+  "text_overlap_vs_eval": 1
+ },
+ "eligible_after_filters": 1500678,
+ "name": "ps_train",
+ "pool_rows": 1501271,
+ "revision": "f10597c5d3d3a63f8b6827701297c3afdf178272",
+ "role": "train",
+ "sources_in_pool": 54146
+}

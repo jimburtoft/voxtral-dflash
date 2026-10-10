@@ -1,0 +1,59 @@
+{
+ "ami": {
+  "quota": 1200,
+  "planned": 678,
+  "unfilled_bins": {
+   "2": 66,
+   "3": 66,
+   "4": 64,
+   "5": 75,
+   "6": 82,
+   "8": 83,
+   "10": 117
+  },
+  "clips": 678,
+  "hours": 25.86
+ },
+ "peoples_speech": {
+  "quota": 861,
+  "planned": 940,
+  "unfilled_bins": {},
+  "clips": 940,
+  "hours": 39.88
+ },
+ "voxpopuli": {
+  "quota": 861,
+  "planned": 947,
+  "unfilled_bins": {},
+  "clips": 947,
+  "hours": 40.6
+ },
+ "librispeech": {
+  "quota": 520,
+  "planned": 564,
+  "unfilled_bins": {},
+  "clips": 564,
+  "hours": 23.77
+ },
+ "mls": {
+  "quota": 440,
+  "planned": 499,
+  "unfilled_bins": {},
+  "clips": 499,
+  "hours": 21.63
+ },
+ "libritts_r": {
+  "quota": 240,
+  "planned": 259,
+  "unfilled_bins": {},
+  "clips": 259,
+  "hours": 10.9
+ },
+ "cv17": {
+  "quota": 400,
+  "planned": 414,
+  "unfilled_bins": {},
+  "clips": 414,
+  "hours": 16.15
+ }
+}

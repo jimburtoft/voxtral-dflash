@@ -1,0 +1,17 @@
+{
+ "config": "en",
+ "dataset": "facebook/voxpopuli",
+ "dropped": {
+  "empty_text": 0,
+  "speaker_in_eval_droplist": 47276,
+  "speaker_unknown_None": 64260,
+  "task001_flagged_list": 4,
+  "text_overlap_vs_eval": 0
+ },
+ "eligible_after_filters": 70942,
+ "name": "vp_train",
+ "pool_rows": 182482,
+ "ref_text_fallback_to_normalized": 5463,
+ "revision": "42f01879c780b4a2e90ec0b4f616c2ece526e4f1",
+ "role": "train"
+}

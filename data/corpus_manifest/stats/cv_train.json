@@ -1,0 +1,20 @@
+{
+ "config": "en",
+ "dataset": "fsicoli/common_voice_17_0",
+ "decode_stage_rejects_within_drawn_ranks": {},
+ "name": "cv_train",
+ "role": "train",
+ "splits": {
+  "train": {
+   "clips": 40000,
+   "hours": 65.443,
+   "max_duration_s": 24.67,
+   "min_duration_s": 1.18,
+   "shards": 20,
+   "speakers": 37475
+  }
+ },
+ "target": 40000,
+ "total_clips": 40000,
+ "total_hours": 65.443
+}

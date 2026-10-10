@@ -1,0 +1,10 @@
+{
+ "config": "en_us",
+ "dataset": "google/fleurs",
+ "dropped": {},
+ "eligible_after_filters": 647,
+ "name": "fleurs_eval",
+ "pool_rows": 647,
+ "revision": "70bb2e84b976b7e960aa89f1c648e09c59f894dd",
+ "role": "eval"
+}

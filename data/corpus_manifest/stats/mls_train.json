@@ -1,0 +1,20 @@
+{
+ "config": "default",
+ "dataset": "parler-tts/mls_eng",
+ "decode_stage_rejects_within_drawn_ranks": {},
+ "name": "mls_train",
+ "role": "train",
+ "splits": {
+  "train": {
+   "clips": 20000,
+   "hours": 82.691,
+   "max_duration_s": 20.0,
+   "min_duration_s": 10.0,
+   "shards": 10,
+   "speakers": 5193
+  }
+ },
+ "target": 20000,
+ "total_clips": 20000,
+ "total_hours": 82.691
+}

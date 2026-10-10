@@ -1,0 +1,16 @@
+{
+ "chapters_in_pool": 2543,
+ "config": "all",
+ "dataset": "mythicinfinity/libritts_r",
+ "dropped": {
+  "chapter_reserved_for_other_corpus": 186144,
+  "empty_text": 0,
+  "task001_flagged_list": 43,
+  "text_overlap_vs_eval": 0
+ },
+ "eligible_after_filters": 168506,
+ "name": "ltts_train",
+ "pool_rows": 354693,
+ "revision": "0d1718db351207d5a493135a62d5ed8cc4733830",
+ "role": "train"
+}

@@ -1,0 +1,13 @@
+# CPU: model code, tests, offline acceptance, upstream format check, HF-reference labels.
+torch>=2.12
+transformers>=4.57,<6
+mistral_common[audio]>=1.8
+safetensors>=0.5
+huggingface_hub>=0.30
+pyarrow>=18
+numpy>=1.26
+soundfile>=0.12
+librosa>=0.10
+datasets>=3.0
+accelerate>=1.0
+pytest>=8
