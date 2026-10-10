@@ -27,6 +27,7 @@ A [DFlash](https://arxiv.org/abs/2602.06036) block-diffusion speculative-decodin
 [`mistralai/Voxtral-Mini-3B-2507`](https://huggingface.co/mistralai/Voxtral-Mini-3B-2507). It
 proposes 15 tokens per step in one forward pass and is verified by Voxtral under greedy decoding.
 The draft was trained on AWS Trainium2 with openly licensed speech data only.
+Training code: [github.com/jimburtoft/voxtral-dflash](https://github.com/jimburtoft/voxtral-dflash).
 
 - **Format:** the public DFlash checkpoint format (`DFlashDraftModel`, Qwen3 layers; the format
   used by vLLM's `qwen3_dflash.py` and the `z-lab/dflash` reference code).
@@ -96,11 +97,15 @@ upstream.
 
 ### Reference implementation (PyTorch)
 
-The training code repository contains `model/dflash.py` (the draft), `model/release.py`
+The [training code repository](https://github.com/jimburtoft/voxtral-dflash) contains `model/dflash.py` (the draft), `model/release.py`
 (load/save), and `eval/acceptance_eval.py` (offline acceptance). The checkpoint also loads with the
 public `z-lab/dflash` reference modelling code (identical block outputs to 2e-5).
 
 ## Training
+
+Full reproduction steps (corpus build, labels, both training stages, evaluation) are in the
+[code repository](https://github.com/jimburtoft/voxtral-dflash) README.
+
 
 - **Data:** 175,000 clips (464 h, <= 30 s) + 4,301 long-form clips (179 h, 30-300 s, built by
   concatenating consecutive training utterances of the same meeting / speaker / source) from
