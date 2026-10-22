@@ -1,9 +1,9 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Static-shape Voxtral-Mini-3B target for PyTorch Native (Neuron) and CPU.
+"""Static-shape Voxtral-Mini-3B target (plain PyTorch: Trainium, CUDA or CPU).
 
 Reuses the Hugging Face audio encoder + projector modules (frozen) and re-implements the
-30-layer Llama text decoder with fixed-shape tensors so that ``torch.compile(backend="neuron")``
-sees one graph per bucket:
+30-layer Llama text decoder with fixed-shape tensors so that ``torch.compile`` (``backend="neuron"``
+on Trainium) sees one graph per bucket:
 
 * ``encode_audio(mel[W,128,3000]) -> [W, 375, 3072]`` audio embeddings
 * ``build_embeds(ids[B,P], audio[B, 375*n, H])`` -> prompt embeddings (audio spliced in at the
@@ -213,9 +213,8 @@ class VoxtralTarget(nn.Module):
         """Chunked prefill against the static cache (B rows share positions).
 
         x [B,C,H] embeddings for positions ``pos`` [C] (long, contiguous). Writes K/V at ``pos``,
-        attends causally to everything cached at <= pos. Returns argmax of the last position [B].
-        One graph for every prompt length (the 30-layer full-prompt prefill with a P x P mask fails
-        to compile for multi-window prompts: NCC_IXRO002). Returns argmax at every chunk position
+        attends causally to everything cached at <= pos. One graph for every prompt length (no
+        P x P mask for multi-window prompts of up to ~4k tokens). Returns argmax at every chunk position
         [B, C]; for a right-padded last chunk the caller reads the last real position. Padded
         positions write K/V beyond the prompt; decode overwrites them before they are attended to
         (decode at position p only attends to <= p, and writes p first).

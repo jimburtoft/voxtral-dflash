@@ -1,4 +1,4 @@
-# CPU: model code, tests, offline acceptance, upstream format check, HF-reference labels.
+# CPU or CUDA: model code, tests, offline checks, HF-reference labels, and (CUDA) the training scripts with --device cuda.
 torch>=2.12
 transformers>=4.57,<6
 mistral_common[audio]>=1.8

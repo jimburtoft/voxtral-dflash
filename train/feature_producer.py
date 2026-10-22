@@ -1,11 +1,12 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Target-feature producer for DFlash training (one process per NeuronCore).
+"""Target-feature producer for DFlash training (one process per accelerator core / device).
 
-The frozen bf16 target (9.4 GB) and the trained fp32 draft + AdamW state (9.3 GB) do not fit one
-24 GB LNC=2 core together with the target graph's scratchpad, so roles are split across cores:
+On a 24 GB Trainium2 logical core (LNC=2) the frozen bf16 target (9.4 GB) and the trained fp32
+draft + AdamW state (9.3 GB) do not fit together with the target graph's scratchpad, so roles are
+split across processes:
 
-    producer cores:  audio -> mel -> target forward -> features at the 5 target layers
-    trainer core:    draft fwd/bwd + optimizer (train/train_draft_queue.py --queue ...)
+    producers:  audio -> mel -> target forward -> features at the 5 target layers
+    trainer:    draft fwd/bwd + optimizer (train/train_draft_queue.py --queue ...)
 
 Producers write ready batches into a bounded file queue in shared memory (``/dev/shm``):
 ``<queue>/<epoch>_<rank>_<seq>.pt`` written atomically (tmp + rename). A batch contains the
@@ -30,6 +31,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from model.config import DraftConfig  # noqa: E402
+from model.device import add_device_arg, get_device, maybe_compile  # noqa: E402
 from model.voxtral_target import VoxtralTarget, load_hf_voxtral  # noqa: E402
 from train.data import LabelData, MelPrep, build_cpu_batch  # noqa: E402
 
@@ -52,11 +54,13 @@ def main():
     ap.add_argument("--layer-ids", default="", help="comma list overriding the target layer set")
     ap.add_argument("--eval-out", default="", help="eval mode: write fixed-anchor eval batches here and exit")
     ap.add_argument("--eval-per-set", type=int, default=32)
+    ap.add_argument("--no-compile", action="store_true")
+    add_device_arg(ap)
     args = ap.parse_args()
 
     q = Path(args.queue)
     q.mkdir(parents=True, exist_ok=True)
-    dev = torch.device("neuron")
+    dev = get_device(args.device)
     cfg = DraftConfig(block_size=args.block_size)
     if args.layer_ids:
         cfg.target_layer_ids = [int(x) for x in args.layer_ids.split(",")]
@@ -76,14 +80,14 @@ def main():
         B = ids.shape[0]
         emb = tgt.build_embeds(ids, audio.reshape(B, -1, tgt.H), span)
         # Right padding only: with causal attention a valid query never attends to a later pad, so the
-        # features at valid positions are exact without a key mask. (A key-padding mask here makes
-        # neuronx-cc fail with [NCC_IXRO002] Undefined SB Memloc.)
+        # features at valid positions are exact without a key-padding mask (one less mask input).
         feats, _ = tgt.forward_full(emb, layer_ids, key_valid=None)
         return feats
 
-    # Two graphs (encoder, decoder): fused, neuronx-cc rejects the graph.
-    enc = torch.compile(tgt.encode_audio, backend="neuron", dynamic=False)
-    dec = torch.compile(_decoder_feats, backend="neuron", dynamic=False)
+    # Encoder and decoder are compiled as two graphs (smaller graphs, and the encoder graph is
+    # shared with label generation).
+    enc = maybe_compile(tgt.encode_audio, dev, not args.no_compile)
+    dec = maybe_compile(_decoder_feats, dev, not args.no_compile)
     pool = ThreadPoolExecutor(max_workers=3)
     gen = torch.Generator().manual_seed(args.seed * 1000 + args.rank)
     log = open(q.parent / f"producer{args.rank}.log", "a")

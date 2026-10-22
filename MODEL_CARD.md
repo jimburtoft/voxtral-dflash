@@ -53,31 +53,37 @@ the same greedy accept rule as vLLM DFlash verification:
 | LibriSpeech test-clean / test-other, Common Voice 17 en test, VoxPopuli en test, FLEURS en_us test, AMI ihm test (<= 30 s, all) | **7.64** |
 | AMI long-form test windows (30 s - 5 min, 2-10 audio windows) | **4.38** |
 
-### End-to-end serving (pre-release vllm-neuron build, Trainium2)
+### End-to-end serving (vllm-neuron, Neuron SDK 2.33, Trainium2)
 
-trn2.3xlarge, tensor parallel 4, BS=1, `/v1/audio/transcriptions`, 50 clips per set (short) and 60
-AMI long-form windows. These numbers come from a pre-release vllm-neuron build with Voxtral
-support and a local fix for a DFlash attention-cache issue in that build; treat them as
-indicative until vllm-neuron Voxtral support is released upstream.
+trn2.3xlarge, tensor parallel 4, BS=1 (one request at a time), greedy, `/v1/audio/transcriptions`,
+50 random held-out clips per set (<= 30 s) and 60 AMI long-form windows (30 s - 5 min). Environment:
+the public Neuron SDK 2.33 DLAMI vLLM venv (vllm 0.29.0, vllm-neuron 0.29.0.1.2.0) with the open
+vllm-neuron Voxtral pull request
+([vllm-project/vllm-neuron#69](https://github.com/vllm-project/vllm-neuron/pull/69)) added on top,
+because the released vllm-neuron does not include Voxtral yet. Benchmark script and exact steps:
+code repository README, "Serving benchmark".
 
 | set | tau | latency without draft (mean ms) | with draft (mean ms) | speedup | WER without / with draft |
 |---|---|---|---|---|---|
-| LibriSpeech test-clean | 8.47 | 250 | 100 | 2.50x | 2.37 / 2.29 % |
-| LibriSpeech test-other | 7.05 | 224 | 102 | 2.20x | 4.64 / 4.26 % |
-| VoxPopuli test | 8.40 | 249 | 101 | 2.48x | 8.22 / 8.22 % |
-| FLEURS en_us test | 6.44 | 267 | 118 | 2.27x | 4.10 / 4.10 % |
-| AMI ihm test | 6.05 | 144 | 83 | 1.73x | 16.84 / 16.13 % |
-| Common Voice 17 test | 4.09 | 139 | 95 | 1.46x | 11.74 / 11.74 % |
-| **all short (300 clips)** | **6.81** | **212** | **100** | **2.13x** | **6.62 / 6.46 %** |
-| AMI long-form (60 windows, 30-300 s) | 3.79 | 4,887 | 3,231 | 1.51x | 34.52 / 34.51 % |
+| LibriSpeech test-clean | 8.47 | 249 | 93 | 2.67x | 2.29 / 2.29 % |
+| LibriSpeech test-other | 7.08 | 222 | 92 | 2.40x | 4.45 / 4.45 % |
+| VoxPopuli test | 8.50 | 247 | 92 | 2.68x | 8.22 / 8.22 % |
+| FLEURS en_us test | 6.42 | 265 | 108 | 2.46x | 4.10 / 4.18 % |
+| AMI ihm test | 6.02 | 140 | 76 | 1.84x | 16.84 / 17.91 % |
+| Common Voice 17 test | 4.17 | 136 | 87 | 1.56x | 11.53 / 11.95 % |
+| **all short (300 clips)** | **6.84** | **210** | **91** | **2.30x** | **6.55 / 6.71 %** |
+| AMI long-form (60 windows, 30-300 s) | 3.78 | 4,992 | 2,487 | 2.01x | 34.59 / 34.55 % |
 
 WER uses a simple lowercase / punctuation-stripping normaliser against the dataset references
-(AMI references are unpunctuated, which inflates its absolute WER). Speculative decoding does not
-change the greedy output distribution; the small number of transcripts that differ from the
-no-draft run come from bf16 numerics of the multi-token verify graph, and WER is unchanged.
+(AMI references are unpunctuated, which inflates its absolute WER). Greedy speculative decoding
+keeps the target's output; 290 of 300 short transcripts are identical to the no-draft run. The
+other 10 differ through bf16 rounding in the multi-token verify graph (one flipped token changes
+the rest of a greedy decode), and on those clips the draft run matches the target's independent
+PyTorch greedy transcript more often (6) than the no-draft server (2). Most of the small short-clip
+WER difference comes from 2 AMI clips of a few words.
 
-Serving block-size sweep (short clips, same weights): block 16: tau 6.81 / 99.7 ms; 14: 4.06 /
-120.7 ms; 12: 3.98 / 122.3 ms; 8: 3.33 / 131.2 ms.
+Serving block-size sweep (short clips, same weights, earlier pre-release build): block 16:
+tau 6.81; 14: 4.06; 12: 3.98; 8: 3.33. Serve at block 16.
 
 ## Usage
 
@@ -91,9 +97,10 @@ vllm serve mistralai/Voxtral-Mini-3B-2507 --tokenizer-mode mistral \
 The draft needs the target's auxiliary hidden states (`target_layer_ids + 1` capture layers).
 The loader format is verified against upstream vLLM 0.31 (CPU) with Voxtral's text decoder:
 config, weights and draft tokens match the reference implementation. Voxtral's multimodal model
-class in upstream vLLM 0.31 does not expose auxiliary hidden states yet, so end-to-end audio
-serving there needs that support first. vllm-neuron (Trainium) support for Voxtral is pending
-upstream.
+class in upstream vLLM (checked through 0.32) does not expose auxiliary hidden states yet, so
+end-to-end audio serving there needs that support first. On Trainium, use vllm-neuron with the
+Voxtral support from [vllm-project/vllm-neuron#69](https://github.com/vllm-project/vllm-neuron/pull/69)
+(pending merge), as in the results above.
 
 ### Reference implementation (PyTorch)
 
@@ -124,6 +131,12 @@ Full reproduction steps (corpus build, labels, both training stages, evaluation)
   long-form tau from 1.1 to 4.4 while keeping short-clip tau within 2 %.
 - **Compute:** AWS Trainium2 (trn2.3xlarge) with PyTorch on Neuron; about 45 instance-hours for
   labelling, training and evaluation.
+- **Environment:** to reproduce, use the public AWS Deep Learning AMI Neuron, SDK 2.33
+  (`/opt/aws_neuronx_venv_torch_neuronx_2_14_0`, torch 2.14 + torch-neuronx 2.14.3) plus
+  `requirements-neuron.txt`. The draft itself was trained with a pre-release build of that stack.
+  On the public SDK 2.33 DLAMI, the released checkpoint gives the same held-out acceptance
+  (7.636 short / 4.388 long-form vs 7.639 / 4.381), and the trainer passes the CPU parity check.
+  The training code also runs on CUDA or CPU (`--device`).
 
 ## Limitations
 

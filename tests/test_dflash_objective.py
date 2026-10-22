@@ -155,3 +155,14 @@ def test_loss_and_acceptance():
     assert dflash_loss(perfect, pb) < 1e-3
     st = acceptance_stats(perfect.argmax(-1), pb)
     assert st["tau_full_blocks"] == 4.0
+
+
+def test_device_helpers_cpu():
+    from model.device import get_device, maybe_compile
+    dev = get_device("cpu")
+    assert dev.type == "cpu"
+
+    def f(x):
+        return x + 1
+    assert maybe_compile(f, dev) is f  # eager on CPU
+    assert get_device("auto").type in ("neuron", "cuda", "cpu")

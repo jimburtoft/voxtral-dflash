@@ -1,16 +1,16 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Greedy transcript labels for the corpus on Neuron (PyTorch Native, static shapes).
+"""Greedy transcript labels for the corpus with the static-shape target (Trainium, CUDA or CPU).
 
-One process per NeuronCore (``NEURON_RT_VISIBLE_CORES=<i>``); each takes every ``world``-th
-shard. Per batch of B clips (all <= 30 s -> one audio window -> identical 383-token prompt):
+One process per accelerator core / device (on Trainium ``NEURON_RT_VISIBLE_CORES=<i>``); each takes
+every ``world``-th shard. Per batch of B clips (all <= 30 s -> one audio window -> identical 383-token prompt):
 
     mel (CPU, HF processor) -> encode_audio -> prefill (B x 383) -> up to MAX_NEW decode steps
 
 Rows that never emit EOS within MAX_NEW are kept but flagged ``finished=False`` (the trainer
 drops them). Output: one parquet per input shard under ``--out``.
 
-Usage (inside the PyTorch Native container):
-    NEURON_RT_VISIBLE_CORES=0 python labels/generate_labels_neuron.py --rank 0 --world 4 \
+Usage (Trainium, inside the torch-neuronx venv):
+    NEURON_RT_VISIBLE_CORES=0 python labels/generate_labels.py --rank 0 --world 4 \
         --manifest <corpus>/shards/train_manifest.parquet --root <corpus>/shards \
         --out <labels>/train
 """
@@ -34,6 +34,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from model.config import TARGET_ID, TARGET_REVISION  # noqa: E402
+from model.device import add_device_arg, get_device, maybe_compile  # noqa: E402
 from model.voxtral_target import VoxtralTarget, load_hf_voxtral  # noqa: E402
 
 EOS = 2
@@ -73,9 +74,10 @@ def main():
     ap.add_argument("--limit-shards", type=int, default=0)
     ap.add_argument("--max-dur", type=float, default=30.0)
     ap.add_argument("--no-compile", action="store_true")
+    add_device_arg(ap)
     args = ap.parse_args()
 
-    dev = torch.device("neuron")
+    dev = get_device(args.device)
     dt = torch.bfloat16
     out_dir = Path(args.out)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -98,17 +100,15 @@ def main():
         emb = tgt.build_embeds(prompt_dev, audio.reshape(B, -1, tgt.H), span)
         return tgt.prefill(emb)
 
-    # Encoder and prefill are compiled as separate graphs: fused, neuronx-cc rejects the
-    # graph with NCC_EVRF009 (it counts ~61 GB of I/O for a ~10 GB signature); separately both compile.
-    if args.no_compile:
-        encode, prefill = tgt.encode_audio, _prefill
-    else:
-        encode = torch.compile(tgt.encode_audio, backend="neuron", dynamic=False)
-        prefill = torch.compile(_prefill, backend="neuron", dynamic=False)
+    # Encoder and prefill are compiled as separate graphs (smaller compile units; the encoder graph
+    # is shared with the feature producers).
+    c = not args.no_compile
+    encode = maybe_compile(tgt.encode_audio, dev, c)
+    prefill = maybe_compile(_prefill, dev, c)
 
     def enc_prefill(mel):
         return prefill(encode(mel))
-    decode = tgt.decode if args.no_compile else torch.compile(tgt.decode, backend="neuron", dynamic=False)
+    decode = maybe_compile(tgt.decode, dev, c)
     pool = ThreadPoolExecutor(max_workers=max(1, (os.cpu_count() or 4) // max(1, args.world)))
     log = open(out_dir / f"rank{args.rank}.log", "a")
     t_start = time.time()

@@ -30,6 +30,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from model.config import TARGET_ID, TARGET_REVISION, DraftConfig  # noqa: E402
+from model.device import add_device_arg, get_device, maybe_compile  # noqa: E402
 from model.voxtral_target import VoxtralTarget, load_hf_voxtral  # noqa: E402
 from train.dflash_objective import build_mask, position_weights  # noqa: E402
 
@@ -120,18 +121,19 @@ def main():
     ap.add_argument("--epochs", type=int, default=100)
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--r-max", type=int, default=1536)
-    ap.add_argument("--device", default="neuron")
     ap.add_argument("--max-items", type=int, default=0, help="stop after N items (smoke tests)")
     ap.add_argument("--items-per-clip", type=int, default=4,
                     help="training items emitted per feature pass (disjoint anchor windows of one clip)")
     ap.add_argument("--eval-out", default="", help="write fixed eval items (exhaustive anchors) and exit")
     ap.add_argument("--eval-n", type=int, default=24)
+    ap.add_argument("--no-compile", action="store_true")
+    add_device_arg(ap)
     args = ap.parse_args()
     from transformers import AutoProcessor
     proc = AutoProcessor.from_pretrained(TARGET_ID, revision=TARGET_REVISION)
     q = Path(args.queue)
     q.mkdir(parents=True, exist_ok=True)
-    dev = torch.device(args.device)
+    dev = get_device(args.device)
     cfg = DraftConfig()
     L_ids = cfg.target_layer_ids
     bs = cfg.block_size
@@ -151,11 +153,8 @@ def main():
     tgt = tgt.to(dev)
     S_cache = ((8 + 375 * 10 + args.r_max + C - 1) // C + 1) * C
     tgt.alloc_cache(1, S_cache, torch.bfloat16, dev)
-    if dev.type == "neuron":
-        enc = torch.compile(tgt.encode_audio, backend="neuron", dynamic=False)
-        fch = torch.compile(lambda x, pos: tgt.feats_chunk(x, pos, L_ids), backend="neuron", dynamic=False)
-    else:
-        enc, fch = tgt.encode_audio, (lambda x, pos: tgt.feats_chunk(x, pos, L_ids))
+    enc = maybe_compile(tgt.encode_audio, dev, not args.no_compile)
+    fch = maybe_compile(lambda x, pos: tgt.feats_chunk(x, pos, L_ids), dev, not args.no_compile)
     log = open(q.parent / f"lf_producer{args.rank}.log", "a")
     print(json.dumps({"rank": args.rank, "rows": len(rows), "S_cache": S_cache}), file=log, flush=True)
     rng = random.Random(args.seed * 100 + args.rank)

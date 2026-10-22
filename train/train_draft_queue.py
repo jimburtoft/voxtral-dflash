@@ -1,9 +1,11 @@
 # SPDX-License-Identifier: Apache-2.0
-"""DFlash draft trainer (Neuron), consuming target features from feature_producer.py.
+"""DFlash draft trainer, consuming target features from feature_producer.py.
 
-Core layout on trn2.3xlarge (LNC=2, 4 x 24 GB logical cores), default:
+Runs on Trainium (``neuron``), CUDA or CPU (``--device``). Default layout on one trn2.3xlarge
+(LNC=2, 4 x 24 GB logical cores):
     cores 0-2: feature producers (frozen bf16 target, ~9.4 GB each)
     core  3  : this trainer (fp32 master draft 2.3 GB + grads 2.3 GB + AdamW 4.7 GB + activations)
+On a larger accelerator the producer and trainer can share a device.
 
 Each step: one ready batch from the queue -> draft fwd/bwd (compiled) -> clip 1.0 -> AdamW ->
 cosine LR with warmup. Held-out acceptance on precomputed fixed-anchor eval batches.
@@ -15,6 +17,7 @@ import argparse
 import json
 import math
 import os
+import subprocess
 import sys
 import time
 from pathlib import Path
@@ -27,6 +30,7 @@ sys.path.insert(0, str(ROOT))
 
 from model.config import TARGET_ID, TARGET_REVISION, DraftConfig  # noqa: E402
 from model.dflash import DFlashDraft  # noqa: E402
+from model.device import add_device_arg, get_device, maybe_compile  # noqa: E402
 from model.release import save_release  # noqa: E402
 from train.dflash_objective import PackedBatch, acceptance_stats  # noqa: E402
 from train.train_cpu_ref import cosine_lr  # noqa: E402
@@ -142,10 +146,11 @@ def main():
     ap.add_argument("--no-compile", action="store_true")
     ap.add_argument("--learn-mask-emb", action="store_true")
     ap.add_argument("--layer-ids", default="", help="must match the producers' --layer-ids")
+    add_device_arg(ap)
     args = ap.parse_args()
 
     torch.manual_seed(args.seed)
-    dev = torch.device("neuron")
+    dev = get_device(args.device)
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
     (out / "args.json").write_text(json.dumps(vars(args), indent=1))
@@ -160,7 +165,7 @@ def main():
     embed, lm_head = load_head(torch.bfloat16)
     mod = DraftStep(draft, embed, lm_head, torch.bfloat16 if args.compute == "bf16" else torch.float32,
                     learn_mask_emb=args.learn_mask_emb).to(dev)
-    step_fn = mod if args.no_compile else torch.compile(mod, backend="neuron", dynamic=False)
+    step_fn = maybe_compile(mod, dev, enabled=not args.no_compile)
     params = list(draft.parameters()) + ([mod.mask_emb] if mod.mask_emb is not None else [])
     opt = torch.optim.AdamW(params, lr=args.lr, betas=(0.9, 0.95), weight_decay=0.0)
     q = Path(args.queue)
@@ -242,7 +247,7 @@ def main():
             save_release(m, ck / "release", mask_embedding=me)
             torch.save({"draft": sd, "mask_emb": me, "step": step + 1}, ck / "train_state.pt")
             if args.s3:
-                os.system(f"aws s3 sync {ck} {args.s3.rstrip('/')}/{ck.name} --quiet &")
+                subprocess.Popen(["aws", "s3", "sync", str(ck), f"{args.s3.rstrip('/')}/{ck.name}", "--quiet"])
 
 
 if __name__ == "__main__":

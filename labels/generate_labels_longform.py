@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Greedy labels for the long-form train corpus (W = 2..10 audio windows of 30 s) on Neuron.
+"""Greedy labels for the long-form train corpus (W = 2..10 audio windows of 30 s) with the static-shape target (Trainium, CUDA or CPU).
 
 Static-shape buckets keyed by W: prompt length P_W = 8 + 375 * W tokens (Voxtral transcription
 template), decode cache sized P_W + max_new. Batch = 1 (4.3k clips), one process per core.
@@ -24,6 +24,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from model.config import TARGET_ID, TARGET_REVISION  # noqa: E402
+from model.device import add_device_arg, get_device, maybe_compile  # noqa: E402
 from model.voxtral_target import VoxtralTarget, load_hf_voxtral  # noqa: E402
 
 EOS = 2
@@ -37,10 +38,12 @@ def main():
     ap.add_argument("--world", type=int, default=1)
     ap.add_argument("--max-new", type=int, default=1536)
     ap.add_argument("--check-every", type=int, default=32)
+    ap.add_argument("--no-compile", action="store_true")
+    add_device_arg(ap)
     args = ap.parse_args()
     from transformers import AutoProcessor
     proc = AutoProcessor.from_pretrained(TARGET_ID, revision=TARGET_REVISION)
-    dev = torch.device("neuron")
+    dev = get_device(args.device)
     dt = torch.bfloat16
     out_dir = Path(args.out)
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -49,10 +52,11 @@ def main():
     tgt = VoxtralTarget(hf, max_pos=8 + 375 * 10 + args.max_new + 8).eval()
     del hf
     tgt = tgt.to(dev)
-    enc = torch.compile(tgt.encode_audio, backend="neuron", dynamic=False)
-    dec = torch.compile(tgt.decode, backend="neuron", dynamic=False)
+    c = not args.no_compile
+    enc = maybe_compile(tgt.encode_audio, dev, c)
+    dec = maybe_compile(tgt.decode, dev, c)
     C = 512
-    pchunk = torch.compile(tgt.prefill_chunk, backend="neuron", dynamic=False)
+    pchunk = maybe_compile(tgt.prefill_chunk, dev, c)
     S = 8 + 375 * 10 + C + args.max_new + 1           # one cache size for every W
     tgt.alloc_cache(1, S, dt, dev)
     log = open(out_dir / f"rank{args.rank}.log", "a")

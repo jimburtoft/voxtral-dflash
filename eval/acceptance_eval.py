@@ -25,6 +25,7 @@ sys.path.insert(0, str(ROOT))
 
 from model.config import DraftConfig  # noqa: E402
 from model.dflash import DFlashDraft  # noqa: E402
+from model.device import add_device_arg, get_device, maybe_compile  # noqa: E402
 from train.train_draft_queue import DraftStep, evaluate, load_head  # noqa: E402
 
 
@@ -34,8 +35,9 @@ def main():
     ap.add_argument("--eval-dirs", nargs="+", required=True, help="one dir per serving block size")
     ap.add_argument("--compute", default="bf16", choices=["bf16", "fp32"])
     ap.add_argument("--out", default="")
+    add_device_arg(ap)
     args = ap.parse_args()
-    dev = torch.device("neuron")
+    dev = get_device(args.device)
     st = torch.load(args.ckpt, map_location="cpu", weights_only=False)
     embed, lm_head = load_head(torch.bfloat16)
     results = {}
@@ -50,7 +52,7 @@ def main():
         step = DraftStep(m, embed, lm_head, torch.bfloat16 if args.compute == "bf16" else torch.float32).to(dev)
         if st.get("mask_emb") is not None:
             step.mask_emb = torch.nn.Parameter(st["mask_emb"].to(dev))
-        fn = torch.compile(step, backend="neuron", dynamic=False)
+        fn = maybe_compile(step, dev)
         res = evaluate(fn, d, dev, S)
         results[f"serve_block_{S}"] = res
         print(json.dumps({"serve_block": S, **{k: v["tau"] for k, v in res.items()}}), flush=True)

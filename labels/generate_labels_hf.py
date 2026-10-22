@@ -9,7 +9,7 @@ Hidden-state convention (same as the public z-lab reference ``extract_context_fe
 and vLLM's aux-hidden-state capture): feature for target layer ``l`` is the output of
 decoder layer ``l`` (HF ``hidden_states[l + 1]``), before the final norm.
 
-This is the small-scale reference; generate_labels_neuron.py labels the full corpus on trn2.
+This is the small-scale reference; generate_labels.py labels the full corpus on an accelerator.
 
 Output: one ``.pt`` per shard with a list of records
 ``{clip_id, dataset, split, license, ids[int32 L], prompt_len, feats[bf16 L x n*H], ref_text, hyp_text}``.
