@@ -55,32 +55,52 @@ the same greedy accept rule as vLLM DFlash verification:
 
 ### End-to-end serving (vllm-neuron, Neuron SDK 2.33, Trainium2)
 
-trn2.3xlarge, tensor parallel 4, BS=1 (one request at a time), greedy, `/v1/audio/transcriptions`,
-50 random held-out clips per set (<= 30 s) and 60 AMI long-form windows (30 s - 5 min). Environment:
-the public Neuron SDK 2.33 DLAMI vLLM venv (vllm 0.29.0, vllm-neuron 0.29.0.1.2.0) with the open
-vllm-neuron Voxtral pull request
-([vllm-project/vllm-neuron#69](https://github.com/vllm-project/vllm-neuron/pull/69)) added on top,
-because the released vllm-neuron does not include Voxtral yet. Benchmark script and exact steps:
-code repository README, "Serving benchmark".
+Environment: trn2.3xlarge, the public Neuron SDK 2.33 DLAMI vLLM venv (vllm 0.29.0,
+vllm-neuron 0.29.0.1.2.0) with the vllm-neuron Voxtral pull request
+([vllm-project/vllm-neuron#69](https://github.com/vllm-project/vllm-neuron/pull/69), commit
+`e0778ed`) on top, because the released vllm-neuron does not include Voxtral yet. That pull
+request also adds the fixes these numbers depend on (DFlash draft mask, GQA decode kernel,
+sequence-parallel audio encoder, LNC=1 kernel grids). Exact serving commands: the Voxtral recipe
+in that pull request (`docs/model-recipes/voxtral.md`).
 
-| set | tau | latency without draft (mean ms) | with draft (mean ms) | speedup | WER without / with draft |
-|---|---|---|---|---|---|
-| LibriSpeech test-clean | 8.47 | 249 | 93 | 2.67x | 2.29 / 2.29 % |
-| LibriSpeech test-other | 7.08 | 222 | 92 | 2.40x | 4.45 / 4.45 % |
-| VoxPopuli test | 8.50 | 247 | 92 | 2.68x | 8.22 / 8.22 % |
-| FLEURS en_us test | 6.42 | 265 | 108 | 2.46x | 4.10 / 4.18 % |
-| AMI ihm test | 6.02 | 140 | 76 | 1.84x | 16.84 / 17.91 % |
-| Common Voice 17 test | 4.17 | 136 | 87 | 1.56x | 11.53 / 11.95 % |
-| **all short (300 clips)** | **6.84** | **210** | **91** | **2.30x** | **6.55 / 6.71 %** |
-| AMI long-form (60 windows, 30-300 s) | 3.78 | 4,992 | 2,487 | 2.01x | 34.59 / 34.55 % |
+**One request at a time** (TP=4, LNC=2, greedy; in-process `LLM.generate`, 2 passes, measured
+with the GQA decode kernel in place):
 
-WER uses a simple lowercase / punctuation-stripping normaliser against the dataset references
-(AMI references are unpunctuated, which inflates its absolute WER). Greedy speculative decoding
-keeps the target's output; 290 of 300 short transcripts are identical to the no-draft run. The
-other 10 differ through bf16 rounding in the multi-token verify graph (one flipped token changes
-the rest of a greedy decode), and on those clips the draft run matches the target's independent
-PyTorch greedy transcript more often (6) than the no-draft server (2). Most of the small short-clip
-WER difference comes from 2 AMI clips of a few words.
+| set | without draft (mean) | with draft (mean) | speedup | tau |
+|---|--:|--:|--:|--:|
+| LibriSpeech test-other, 48 clips | 167.5 ms | 88.2 ms | 1.90x | 5.37 |
+| LibriSpeech test-clean, 24 clips | -- | 85.3 ms | | 6.10 |
+
+With the 384-token prefill bucket and the sequence-parallel encoder the same test-other clips take
+86.0 ms over HTTP. The GQA decode kernel left the no-draft transcripts unchanged (48 / 48). With
+the draft, 45 / 48 test-other and 24 / 24 test-clean transcripts are unchanged; the other 3 differ
+by bf16 rounding in the multi-token verify step. WER with the draft is 4.91 % on test-clean; on
+test-other it is 7.61-7.87 % with the in-process harness and 5.71-5.96 % with the HTTP harness
+(simple lowercase / punctuation normaliser). The in-process harness uses a chat prompt ("Transcribe
+this audio."), the HTTP harness the `/v1/audio/transcriptions` transcription prompt, which
+transcribes better.
+
+**Serving, closed loop** (48 LibriSpeech test-other clips, 2 passes, with the draft):
+
+| concurrent requests | 1 | 2 | 4 | 8 | 16 |
+|---|--:|--:|--:|--:|--:|
+| TP=4, LNC=2 (`--max-num-seqs 16`): real-time factor | 68.8x | 80.1x | 94.9x | 105.5x | 114.6x |
+| TP=4, LNC=2: p50 latency | 82 ms | 139 ms | 232 ms | 381 ms | 677 ms |
+| TP=4 x DP=2, LNC=1 (`--max-num-seqs 8` per replica): real-time factor | 52.5x | 95.0x | 109.3x | 126.3x | 138.4x |
+| TP=4 x DP=2, LNC=1: p50 latency | 108 ms | 118 ms | 207 ms | 331 ms | 580 ms |
+| tau (both) | 5.3 | 5.3 | 5.3 | 5.3 | 5.3 |
+
+Without the draft the LNC=2 real-time factor is 30.8x at 1 and 76.0x at 16 concurrent requests.
+LNC=2 gives the lowest latency for single requests; two LNC=1 replicas give 1.16-1.21x the
+throughput with two or more requests in flight.
+
+Earlier per-dataset results (2026-10-22, before the GQA kernel and encoder changes, one request
+at a time, 50 held-out clips per set) for the acceptance on other data: tau 8.47 LibriSpeech
+test-clean, 7.08 test-other, 8.50 VoxPopuli, 6.42 FLEURS, 6.02 AMI ihm, 4.17 Common Voice 17;
+3.78 on 60 AMI long-form windows (30 s - 5 min). The speedup over no draft was 1.56x (Common Voice)
+to 2.68x (VoxPopuli) per set, 2.30x over all 300 short clips and 2.01x on long-form audio. Greedy
+speculative decoding keeps the target's output up to bf16 rounding in the multi-token verify graph
+(290 / 300 short transcripts identical to the no-draft run).
 
 Serving block-size sweep (short clips, same weights, earlier pre-release build): block 16:
 tau 6.81; 14: 4.06; 12: 3.98; 8: 3.33. Serve at block 16.
